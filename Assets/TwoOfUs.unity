@@ -365,8 +365,8 @@ MonoBehaviour:
   dialogueContainer:
     name: Yukihara
     testDialogue: Ight, we're using this as a test
-    dialogueText: {fileID: 1751078334}
-    nameText: {fileID: 1237858457}
+    dialogueText: {fileID: 1237858457}
+    nameText: {fileID: 1751078334}
 --- !u!1 &760982720
 GameObject:
   m_ObjectHideFlags: 0

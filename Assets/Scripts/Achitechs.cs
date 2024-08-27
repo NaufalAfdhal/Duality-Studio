@@ -19,7 +19,7 @@ public class Achitechs
     public string fullTargetText => preText + targetText;
 
     public enum BuildMethod{instant, typeWriter, fade};
-    public BuildMethod buildMethod { get; private set; } = BuildMethod.instant;
+    public BuildMethod buildMethod { get; private set; } = BuildMethod.typeWriter;
 
     public Color textColor { get { return tmp_text.color; } set { tmp_text.color = value; } }
     
@@ -91,6 +91,7 @@ public class Achitechs
     private void OnComplete()
     {
         buildProcess = null;
+        isSped = false;
     }
 
     private void Prepare()
@@ -117,6 +118,16 @@ public class Achitechs
     }
     private void Prepare_TypeWriter()
     {
+        tmp_text.color = tmp_text.color;
+        tmp_text.maxVisibleCharacters = 0;
+        tmp_text.text = preText;
+        if (preText is not "")
+        {
+            tmp_text.ForceMeshUpdate();
+            tmp_text.maxVisibleCharacters = tmp_text.textInfo.characterCount;
+        }
+        tmp_text.text += targetText;
+        tmp_text.ForceMeshUpdate();
 
     }
     private void Prepare_Fade()
@@ -125,7 +136,12 @@ public class Achitechs
     }
     private IEnumerator Build_TypeWriter()
     {
-        yield return null;
+        while (tmp_text.maxVisibleCharacters < tmp_text.textInfo.characterCount)
+        {
+            tmp_text.maxVisibleCharacters+= isSped ? charPerCycle * 5 : charPerCycle;
+
+            yield return new WaitForSeconds(0.015f/speed);
+        }
     }
     private IEnumerator Build_Fade()
     {
@@ -134,5 +150,21 @@ public class Achitechs
     private IEnumerator Build_Instant()
     {
         yield return null;
+    }
+
+    public void ForceComplete()
+    {
+        switch (buildMethod)
+        {
+            case (BuildMethod.typeWriter):
+                tmp_text.maxVisibleCharacters = tmp_text.textInfo.characterCount;
+                break;
+            case (BuildMethod.fade):
+                tmp_text.maxVisibleCharacters = tmp_text.textInfo.characterCount;
+                break;
+        }
+
+        Stop();
+        OnComplete();
     }
 }
