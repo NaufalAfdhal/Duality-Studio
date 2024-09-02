@@ -19,7 +19,7 @@ public class Achitechs
     public string fullTargetText => preText + targetText;
 
     public enum BuildMethod{instant, typeWriter, fade};
-    public BuildMethod buildMethod { get; private set; } = BuildMethod.typeWriter;
+    public BuildMethod buildMethod { get; private set; } = BuildMethod.fade;
 
     public Color textColor { get { return tmp_text.color; } set { tmp_text.color = value; } }
     
@@ -132,7 +132,53 @@ public class Achitechs
     }
     private void Prepare_Fade()
     {
+        tmp_text.color = tmp_text.color;
+        tmp_text.text = preText;
+        if (preText is not "")
+        {
+            tmp_text.ForceMeshUpdate();
+            preText_len = tmp_text.textInfo.characterCount;
+        }
+        else
+        {
+            preText_len = 0;
+        }
 
+        tmp_text.text += targetText;
+        tmp_text.maxVisibleCharacters = int.MaxValue;
+        tmp_text.ForceMeshUpdate();
+
+        TMP_TextInfo textInfo = tmp_text.textInfo;
+        Color visibleColor = new Color(textColor.r, textColor.g, textColor.b, 1);
+        Color invisibleColor = new Color(textColor.r, textColor.g, textColor.b, 0);
+
+        Color32[] vertexColor = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
+
+        for (int i = 0; i < textInfo.characterCount; i++)
+        {
+            TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+
+            if (!charInfo.isVisible)
+            {
+                continue;
+            }
+
+            if(i < preText_len)
+            {
+                for(int v = 0; v < 4; v++)
+                {
+                    vertexColor[charInfo.vertexIndex + v] = visibleColor;
+                }
+            }
+            else
+            {
+                for (int v = 0; v < 4; v++)
+                {
+                    vertexColor[charInfo.vertexIndex + v] = invisibleColor;
+                }
+            }
+        }
+        tmp_text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
     private IEnumerator Build_TypeWriter()
     {
@@ -145,7 +191,56 @@ public class Achitechs
     }
     private IEnumerator Build_Fade()
     {
-        yield return null;
+        int minRange = preText_len;
+        int maxRange = minRange + 1;
+
+        byte alphaThreshold = 15;
+
+        TMP_TextInfo textInfo = tmp_text.textInfo;
+
+        Color32[] vertexColors = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
+        float[] alphas = new float[textInfo.characterCount];
+
+        while (true)
+        {
+            float fadeSpeed = ((isSped ? charPerCycle * 5 : charPerCycle) * speed)*4f;
+            for (int i = minRange; i < maxRange; i++)
+            {
+                TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+
+                if (!charInfo.isVisible)
+                {
+                    continue;
+                }
+
+                int vertxIndex = textInfo.characterInfo[i].vertexIndex;
+                alphas[i] = Mathf.MoveTowards(alphas[i], 255, fadeSpeed);
+
+                for (int v = 0; v < 4; v++)
+                {
+                    vertexColors[charInfo.vertexIndex + v].a = (byte)alphas[i];
+                }
+                if (alphas[i] >= 255)
+                {
+                    minRange++;
+                }
+            }
+            tmp_text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+
+            bool lastCharVis = !textInfo.characterInfo[maxRange - 1].isVisible;
+            if (alphas[maxRange -1] > alphaThreshold|| lastCharVis)
+            {
+                if(maxRange < textInfo.characterCount)
+                {
+                    maxRange++;
+                }
+                else if (alphas[maxRange - 1] >= 255 ||lastCharVis)
+                {
+                    break;
+                }
+            }
+            yield return new WaitForEndOfFrame();
+        }
     }
     private IEnumerator Build_Instant()
     {
