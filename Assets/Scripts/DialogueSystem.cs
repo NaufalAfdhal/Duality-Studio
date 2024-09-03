@@ -5,7 +5,9 @@ using UnityEngine;
 public class DialogueSystem : MonoBehaviour
 {
     public ThouWhoSpeaks dialogueContainer = new ThouWhoSpeaks();
+
     public static DialogueSystem instance;
+
     private void Awake()
     {
         if (instance == null)
