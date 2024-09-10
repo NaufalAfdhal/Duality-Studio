@@ -1,18 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
-public class ThouWhoSpeaks : MonoBehaviour
+[System.Serializable]
+public class ThouWhoSpeaks
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [SerializeField] string name = "Yukihara";
+    [SerializeField] string testDialogue = "Ight, we're using this as a test";
+    public TextMeshProUGUI dialogueText;
+    public TextMeshProUGUI nameText;
 }
